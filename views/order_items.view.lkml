@@ -176,7 +176,7 @@ view: order_items {
     convert_tz: no
   }
 
-  measure: gross_margin_pcnt {
+  measure: gross_margin_percent {
     description: "Total Gross Margin Amount / Total Gross Revenue"
     type: number
     sql: ${total_gross_margin_amount}/ NULLIF(${total_gross_revenue},0) ;;
