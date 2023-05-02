@@ -114,7 +114,6 @@ view: order_items {
     sql: ${TABLE}.shipped_at ;;
   }
 
-# Dimension added to define status of item order (e.g. "Complete", "Cancelled")
   dimension: status {
     description: "Status of item order"
     type: string
