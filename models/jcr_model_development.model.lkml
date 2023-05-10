@@ -81,6 +81,15 @@ explore: order_items {
     sql_on: ${products.distribution_center_id} = ${distribution_centers.id} ;;
     relationship: many_to_one
   }
+
+  join: customer_lifetime_orders {
+    type: left_outer
+    sql_on: ${customer_lifetime_orders.customer_id} =  ${order_items.user_id};;
+    relationship: many_to_one
+  }
+
 }
 
 explore: users {}
+
+explore: customer_lifetime_orders {}

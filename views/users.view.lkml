@@ -24,6 +24,7 @@ view: users {
   dimension: age {
     description: "Age of user"
     type: number
+    #value_format_name: "decimal_2"
     sql: ${TABLE}.age ;;
   }
 
@@ -149,6 +150,7 @@ view: users {
     description: "Traffic source"
     type: string
     sql: ${TABLE}.traffic_source ;;
+    drill_fields: [age, gender]
   }
 
   # A measure is a field that uses a SQL aggregate function. Here are defined sum and average
@@ -166,6 +168,7 @@ view: users {
     description: "Average age of users"
     type: average
     sql: ${age} ;;
+    value_format_name: "decimal_2"
   }
 
   measure: average_number_of_months_since_signup {
