@@ -5,7 +5,7 @@ view: order_items {
   # The sql_table_name parameter indicates the underlying database table
   # to be used for all fields in this view.
   sql_table_name: `thelook.order_items`;;
-  drill_fields: [id]
+  drill_fields: [id, product_details*]
   # This primary key is the unique key for this table in the underlying database.
   # You need to define a primary key in a view in order to join to other views.
 
@@ -24,9 +24,17 @@ view: order_items {
     timeframes: [
       raw,
       time,
+      hour_of_day,
       date,
+      day_of_week,
+      day_of_week_index,
+      day_of_month,
+      day_of_year,
       week,
+      week_of_year,
       month,
+      month_name,
+      month_num,
       quarter,
       year
     ]
@@ -194,7 +202,6 @@ view: order_items {
     description: "Date in which customer's latest order was created"
     type: date
     sql: max(${created_raw}) ;;
-    convert_tz: no
   }
 
   measure: number_of_customers {
@@ -237,6 +244,7 @@ view: order_items {
     sql: ${gross_margin_amount} ;;
     filters: [status: "Complete"]
     value_format_name: usd
+    drill_fields: [product_details*]
   }
 
   measure: total_gross_revenue {
@@ -271,5 +279,8 @@ view: order_items {
       products.name,
       products.id
     ]
+  }
+  set: product_details{
+    fields: [products.category, products.brand, total_gross_revenue, total_gross_margin_amount]
   }
 }

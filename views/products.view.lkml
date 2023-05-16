@@ -6,7 +6,7 @@ view: products {
   # to be used for all fields in this view.
   sql_table_name: `thelook.products`
     ;;
-  drill_fields: [id]
+  drill_fields: [id, category, brand, name]
   # This primary key is the unique key for this table in the underlying database.
   # You need to define a primary key in a view in order to join to other views.
 
@@ -23,6 +23,11 @@ view: products {
     sql: ${TABLE}.brand ;;
     drill_fields: [category, name]
     suggest_explore: products
+    link: {
+      label: "Search Google"
+      url: "http://www.google.com/search?q={{ value }}"
+      icon_url: "http://google.com/favicon.ico"
+    }
     # suggest_dimension: brand
   }
 
@@ -30,6 +35,7 @@ view: products {
     description: "Product category"
     type: string
     sql: ${TABLE}.category ;;
+    drill_fields: [brand, name]
   }
 
   dimension: cost {
@@ -76,6 +82,7 @@ view: products {
     description: "Average cost of products"
     type: average
     sql: ${cost} ;;
+    value_format_name: usd
   }
 
   measure: count {
@@ -87,6 +94,7 @@ view: products {
     description: "Total cost of products"
     type: sum
     sql: ${cost} ;;
+    value_format_name: usd
   }
 
   # ----- Sets of fields for drilling ------
@@ -100,4 +108,5 @@ view: products {
       order_items.count
     ]
   }
+
 }

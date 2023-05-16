@@ -26,6 +26,7 @@ view: users {
     type: number
     #value_format_name: "decimal_2"
     sql: ${TABLE}.age ;;
+    #drill_fields: [gender]
   }
 
   dimension: age_tier {
@@ -47,6 +48,7 @@ view: users {
     description: "User country"
     type: string
     map_layer_name: countries
+    drill_fields: [state, city]
     sql: ${TABLE}.country ;;
   }
 
@@ -84,6 +86,7 @@ view: users {
     description: "User gender"
     type: string
     sql: ${TABLE}.gender ;;
+    drill_fields: [age_tier]
   }
 
   dimension: is_long_term_customer {
@@ -121,7 +124,7 @@ view: users {
 
   dimension: postal_code {
     description: "User postal code"
-    type: string
+    type: zipcode
     sql: ${TABLE}.postal_code ;;
   }
 
@@ -136,6 +139,7 @@ view: users {
 
   dimension: state {
     description: "User state"
+    map_layer_name: us_states
     type: string
     sql: ${TABLE}.state ;;
   }
@@ -150,7 +154,7 @@ view: users {
     description: "Traffic source"
     type: string
     sql: ${TABLE}.traffic_source ;;
-    drill_fields: [age, gender]
+    drill_fields: [age_tier, gender]
   }
 
   # A measure is a field that uses a SQL aggregate function. Here are defined sum and average

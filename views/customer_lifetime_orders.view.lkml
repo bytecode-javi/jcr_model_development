@@ -77,8 +77,8 @@ view: customer_lifetime_orders {
   dimension: lifetime_revenue_group {
     type: tier
     description: "Specific value groupings associated with total amount of revenue from an individual customer over the course of their patronage"
-    style: integer
-    tiers: [5,20,50,100,500,1000]
+    style: relational
+    tiers: [5.00,20.00,50.00,100.00,500.00,1000.00]
     sql: ${lifetime_revenue} ;;
     value_format_name: usd
   }
