@@ -70,6 +70,23 @@ view: users {
     sql: ${TABLE}.created_at ;;
   }
 
+  dimension: created_last_month {
+    type: yesno
+    sql: ${created_date}>=date_trunc(date_sub(current_date(), interval 1 month),month)
+      and ${created_date}<date_trunc(current_date(),month);;
+  }
+
+  dimension: created_last_year {
+    type: yesno
+    sql: ${created_date}>=date_trunc(date_sub(current_date(), interval 1 year),year)
+      and ${created_date}<date_trunc(current_date(),year);;
+  }
+
+  dimension: days_since_signup {
+    type: number
+    sql: date_diff(current_date,${created_date},day) ;;
+  }
+
   dimension: email {
     description: "User email"
     type: string
@@ -85,14 +102,30 @@ view: users {
   dimension: gender {
     description: "User gender"
     type: string
-    sql: ${TABLE}.gender ;;
+    case: {
+      when: {
+        sql: ${TABLE}.gender = "M" ;;
+        label: "Male"
+      }
+      when: {
+        sql: ${TABLE}.gender = "F" ;;
+        label: "Female"
+      }
+      else: "Undefined"
+    }
     drill_fields: [age_tier]
   }
 
   dimension: is_long_term_customer {
     description: "Customer signed up longer that 90 days ago"
-    type: yesno
-    sql: ${days_since_signup} > 90 ;;
+    type: string
+      case: {
+        when: {
+          sql: ${days_since_signup} >90 ;;
+          label: "Long-Term"
+        }
+        else: "New"
+      }
   }
 
   dimension: last_name {
@@ -113,28 +146,24 @@ view: users {
     sql: ${TABLE}.longitude ;;
   }
 
+  dimension: months_since_signup {
+    type: number
+    sql: date_diff(current_date,${created_date},month) ;;
+  }
+
   dimension: months_since_signup_tier {
     description: "The number of months since a customer has signed up on the website in tiered bins"
     type: tier
     tiers: [0,1,2,3,4,5,6,7,8,9,10,11,12,24,36,48,60]
     sql: ${months_since_signup} ;;
     style: integer
-    drill_fields: [age_tier, gender]
+    drill_fields: [user_details*]
   }
 
   dimension: postal_code {
     description: "User postal code"
     type: zipcode
     sql: ${TABLE}.postal_code ;;
-  }
-
-  dimension_group: since_signup {
-    description: "The time since a customer has signed up on the website"
-    type: duration
-    intervals: [day, month]
-    sql_start: ${created_raw} ;;
-    sql_end: CURRENT_TIMESTAMP();;
-    drill_fields: [age_tier, gender]
   }
 
   dimension: state {
@@ -154,7 +183,22 @@ view: users {
     description: "Traffic source"
     type: string
     sql: ${TABLE}.traffic_source ;;
-    drill_fields: [age_tier, gender]
+    drill_fields: [user_details*]
+  }
+
+  dimension: years_since_signup {
+    type: number
+    sql: date_diff(current_date,${created_date},year) ;;
+  }
+
+  dimension: years_since_signup_tier {
+    description: "The number of years since a customer has signed up on the website in tiered bins"
+    type: tier
+    tiers: [0,1,2,3,4,5,6]
+    sql: ${years_since_signup};;
+    style: integer
+    drill_fields: [user_details*]
+
   }
 
   # A measure is a field that uses a SQL aggregate function. Here are defined sum and average
@@ -182,6 +226,13 @@ view: users {
     value_format_name: decimal_2
   }
 
+  measure: average_number_of_years_since_signup {
+    description: "Average number of years between a customer initially registering on the website and now"
+    type: average
+    sql: ${years_since_signup} ;;
+    value_format_name: decimal_2
+  }
+
   measure: user_count {
     description: "Count of distinct users"
     type: count_distinct
@@ -193,6 +244,15 @@ view: users {
     description: "Total age"
     type: sum
     sql: ${age} ;;
+  }
+
+## DRILL FIELDS ##
+  set: location_details {
+    fields: [state,city]
+  }
+
+  set: user_details {
+    fields: [gender, age_tier]
   }
 
 }

@@ -3,7 +3,7 @@ connection: "looker_partner_demo"
 
 # include all the views
 include: "/views/**/*.view"
-#include: "/derived_tables/**/*.view"
+#include: "/test/**/*.view"
 
 # Datagroups define a caching policy for an Explore. To learn more,
 # use the Quick Help panel on the right to see documentation.
@@ -94,5 +94,3 @@ explore: order_items {
 explore: users {}
 
 explore: customer_lifetime_orders {}
-
-#explore: customer_details {}
