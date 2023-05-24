@@ -2,22 +2,18 @@
 # This view was enhanced from it's original form in order to perform a case study analysis as part of the Onboarding process at Bytecode IO
 
 view: order_items {
-  # The sql_table_name parameter indicates the underlying database table
-  # to be used for all fields in this view.
   sql_table_name: `thelook.order_items`;;
   drill_fields: [id, product_details*]
-  # This primary key is the unique key for this table in the underlying database.
-  # You need to define a primary key in a view in order to join to other views.
 
   dimension: id {
     primary_key: yes
+    description: "Unique identifier for item order"
     type: number
     sql: ${TABLE}.id ;;
   }
 
   # Dates and timestamps can be represented in Looker using a dimension group of type: time.
   # Looker converts dates and timestamps to the specified timeframes within the dimension group.
-
   dimension_group: created {
     description: "Date the item order was created"
     type: time
@@ -47,9 +43,17 @@ view: order_items {
     timeframes: [
       raw,
       time,
+      hour_of_day,
       date,
+      day_of_week,
+      day_of_week_index,
+      day_of_month,
+      day_of_year,
       week,
+      week_of_year,
       month,
+      month_name,
+      month_num,
       quarter,
       year
     ]
@@ -62,15 +66,47 @@ view: order_items {
     sql: ${sale_price} - ${inventory_items.cost} ;;
   }
 
-  # Here's what a typical dimension looks like in LookML.
-  # A dimension is a groupable field that can be used to filter query results.
-  # This dimension will be called "Inventory Item ID" in Explore.
-
   dimension: inventory_item_id {
     description: "Unique identifier for inventory items"
     type: number
     # hidden: yes
     sql: ${TABLE}.inventory_item_id ;;
+  }
+
+  dimension: iscancelled {
+    description: "Identify order items that have been cancelled"
+    type: yesno
+    sql: ${status}= "Cancelled" ;;
+  }
+
+  dimension: iscomplete {
+    description: "Identify order items that have been completed"
+    type: yesno
+    sql: ${status}!="Cancelled" and ${returned_raw} is null ;;
+  }
+
+  dimension: isreturned {
+    description: "Identify order items that have been returned"
+    type: yesno
+    sql: ${returned_raw} is not null ;;
+  }
+
+  dimension: mtd_only {
+    group_label: "To-Date Filters"
+    label: "MTD"
+    view_label: "_orders_PoP"
+    type: yesno
+    sql:  EXTRACT(DAY FROM ${created_raw}) <= EXTRACT(DAY FROM current_date) ;;
+  }
+
+  dimension: pop_row {
+    view_label: "_orders_PoP"
+    label_from_parameter: pop_compare
+    type: string
+    sql:
+    {% if pop_compare._parameter_value == 'Year' %} ${created_year}
+    {% elsif pop_compare._parameter_value == 'Month' %} ${created_month}
+    {% else %}NULL{% endif %};;
   }
 
   dimension: order_id {
@@ -92,9 +128,17 @@ view: order_items {
     timeframes: [
       raw,
       time,
+      hour_of_day,
       date,
+      day_of_week,
+      day_of_week_index,
+      day_of_month,
+      day_of_year,
       week,
+      week_of_year,
       month,
+      month_name,
+      month_num,
       quarter,
       year
     ]
@@ -113,9 +157,17 @@ view: order_items {
     timeframes: [
       raw,
       time,
+      hour_of_day,
       date,
+      day_of_week,
+      day_of_week_index,
+      day_of_month,
+      day_of_year,
       week,
+      week_of_year,
       month,
+      month_name,
+      month_num,
       quarter,
       year
     ]
@@ -135,9 +187,16 @@ view: order_items {
     sql: ${TABLE}.user_id ;;
   }
 
+  dimension: ytd_only {
+    group_label: "To-Date Filters"
+    label: "YTD"
+    view_label: "_orders_PoP"
+    type: yesno
+    sql:  EXTRACT(DAYOFYEAR FROM ${created_raw}) <= EXTRACT(DAYOFYEAR FROM current_date) ;;
+  }
+
   # A measure is a field that uses a SQL aggregate function. Here are defined sum and average
   # measures for this dimension, but you can also add measures of many different aggregates.
-  # Click on the type parameter to see all the options in the Quick Help panel on the right.
 
   measure: average_gross_margin {
     description: "Average difference between the total revenue from completed sales and the cost of the goods that were sold"
@@ -153,7 +212,6 @@ view: order_items {
     sql: ${order_id} ;;
     filters: [status: "Complete"]
     value_format_name: decimal_2
-    html: {{average_order_count._rendered_value }} ;;
   }
 
   measure: average_sale_price {
@@ -189,6 +247,47 @@ view: order_items {
     type: number
     sql: ${total_gross_margin_amount}/ NULLIF(${total_gross_revenue},0) ;;
     value_format_name: percent_2
+  }
+
+  measure: gross_revenue_mtd {
+    type: sum
+    filters: [iscomplete: "yes", mtd_only: "yes"]
+    sql: ${sale_price} ;;
+    value_format_name: usd
+  }
+
+  measure: gross_revenue {
+    type: number
+    label: "Gross Revenue"
+    sql:{% if pop_to_date._parameter_value == 'Yes' %}
+            ${gross_revenue_ytd}
+        {% elsif pop_to_date._parameter_value == 'Yes' %}
+            ${gross_revenue_mtd}
+        {% else %}
+            ${total_gross_revenue}
+        {% endif %} ;;
+    value_format_name: usd
+  }
+
+  measure: gross_revenue_pop {
+    type: number
+    label: "Gross Revenue"
+    view_label: "_orders_PoP"
+    sql:{% if pop_to_date._parameter_value == 'Yes' and pop_compare._parameter_value == 'Year' %}
+            ${gross_revenue_ytd}
+        {% elsif pop_to_date._parameter_value == 'Yes' and pop_compare._parameter_value=='Month' %}
+            ${gross_revenue_mtd}
+        {% else %}
+            ${total_gross_revenue}
+        {% endif %} ;;
+    value_format_name: usd
+  }
+
+  measure: gross_revenue_ytd {
+    type: sum
+    filters: [iscomplete: "yes", ytd_only: "yes"]
+    sql: ${sale_price} ;;
+    value_format_name: usd
   }
 
   measure: item_return_rate {
@@ -253,6 +352,7 @@ view: order_items {
     sql:  ${sale_price} ;;
     filters: [status: "Complete"]
     value_format_name: usd
+    drill_fields: [product_details*]
   }
 
   measure: total_sale_price {
@@ -260,11 +360,24 @@ view: order_items {
     type: sum
     sql: ${sale_price} ;;
     value_format_name: usd_0
+    drill_fields: [product_details*]
   }
 
-  measure: count {
-    type: count
-    drill_fields: [detail*]
+
+  ##--parameters--##
+  parameter: pop_compare {
+    label: "Choose Comparison (Pivot)"
+    view_label: "_orders_PoP"
+    type: unquoted
+    default_value: "Year"
+    allowed_value: {value: "Year"}
+    allowed_value: {value: "Month"}
+  }
+
+  parameter: pop_to_date {
+    type: unquoted
+    allowed_value: {value: "Yes"}
+    allowed_value: {value:"No"}
   }
 
   # ----- Sets of fields for drilling ------

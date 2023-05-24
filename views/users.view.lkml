@@ -246,6 +246,7 @@ view: users {
     sql: ${age} ;;
   }
 
+
 ## DRILL FIELDS ##
   set: location_details {
     fields: [state,city]
