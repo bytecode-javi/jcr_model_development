@@ -3,7 +3,7 @@ connection: "looker_partner_demo"
 
 # include all the views
 include: "/views/**/*.view"
-#include: "/test/**/*.view"
+include: "/derived_views/**/*.view"
 
 # Datagroups define a caching policy for an Explore. To learn more,
 # use the Quick Help panel on the right to see documentation.
@@ -77,15 +77,28 @@ explore: order_items {
     relationship: many_to_one
   }
 
-  join: distribution_centers {
-    type: left_outer
-    sql_on: ${products.distribution_center_id} = ${distribution_centers.id} ;;
-    relationship: many_to_one
-  }
-
   join: customer_lifetime_orders {
     type: left_outer
     sql_on: ${customer_lifetime_orders.customer_id} =  ${order_items.user_id};;
+    relationship: many_to_one
+  }
+
+  join: orders_ranking {
+    type: left_outer
+    sql_on: ${orders_ranking.user_id} = ${order_items.user_id} ;;
+    relationship: many_to_one
+  }
+
+  join: events {
+    type: left_outer
+    sql_on: ${events.user_id} = ${order_items.user_id};;
+    relationship: many_to_one
+
+  }
+
+  join: compare_brands {
+    type: left_outer
+    sql_on: ${compare_brands.id} = ${order_items.id} ;;
     relationship: many_to_one
   }
 
@@ -94,3 +107,7 @@ explore: order_items {
 explore: users {}
 
 explore: customer_lifetime_orders {}
+
+explore: orders_ranking {}
+
+explore: product_repeat {}

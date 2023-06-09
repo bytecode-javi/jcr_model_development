@@ -83,6 +83,10 @@ view: customer_lifetime_orders {
     value_format_name: usd
   }
 
+## TEST ##
+
+
+
 ## MEASURES ##
 
   measure: avg_days_since_last_order {

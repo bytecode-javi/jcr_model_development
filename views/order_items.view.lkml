@@ -73,19 +73,19 @@ view: order_items {
     sql: ${TABLE}.inventory_item_id ;;
   }
 
-  dimension: iscancelled {
+  dimension: is_cancelled {
     description: "Identify order items that have been cancelled"
     type: yesno
     sql: ${status}= "Cancelled" ;;
   }
 
-  dimension: iscomplete {
+  dimension: is_complete {
     description: "Identify order items that have been completed"
     type: yesno
     sql: ${status}!="Cancelled" and ${returned_raw} is null ;;
   }
 
-  dimension: isreturned {
+  dimension: is_returned {
     description: "Identify order items that have been returned"
     type: yesno
     sql: ${returned_raw} is not null ;;
@@ -99,12 +99,21 @@ view: order_items {
     sql:  EXTRACT(DAY FROM ${created_raw}) <= EXTRACT(DAY FROM current_date) ;;
   }
 
+  dimension: qtd_only {
+    group_label: "To-Date Filters"
+    label: "QTD"
+    view_label: "_orders_PoP"
+    type: yesno
+    sql:  EXTRACT(QUARTER FROM ${created_raw}) <= EXTRACT(QUARTER FROM current_date) ;;
+  }
+
   dimension: pop_row {
     view_label: "_orders_PoP"
     label_from_parameter: pop_compare
     type: string
     sql:
     {% if pop_compare._parameter_value == 'Year' %} ${created_year}
+    {% elsif pop_compare._parameter_value == 'Quarter' %} ${created_quarter}
     {% elsif pop_compare._parameter_value == 'Month' %} ${created_month}
     {% else %}NULL{% endif %};;
   }
@@ -251,7 +260,14 @@ view: order_items {
 
   measure: gross_revenue_mtd {
     type: sum
-    filters: [iscomplete: "yes", mtd_only: "yes"]
+    filters: [is_complete: "yes", mtd_only: "yes"]
+    sql: ${sale_price} ;;
+    value_format_name: usd
+  }
+
+  measure: gross_revenue_qtd {
+    type: sum
+    filters: [is_complete: "yes", qtd_only: "yes"]
     sql: ${sale_price} ;;
     value_format_name: usd
   }
@@ -261,6 +277,8 @@ view: order_items {
     label: "Gross Revenue"
     sql:{% if pop_to_date._parameter_value == 'Yes' %}
             ${gross_revenue_ytd}
+        {% elsif pop_to_date._parameter_value == 'Yes' %}
+            ${gross_revenue_qtd}
         {% elsif pop_to_date._parameter_value == 'Yes' %}
             ${gross_revenue_mtd}
         {% else %}
@@ -275,6 +293,8 @@ view: order_items {
     view_label: "_orders_PoP"
     sql:{% if pop_to_date._parameter_value == 'Yes' and pop_compare._parameter_value == 'Year' %}
             ${gross_revenue_ytd}
+        {% elsif pop_to_date._parameter_value == 'Yes' and pop_compare._parameter_value=='Quarter' %}
+            ${gross_revenue_qtd}
         {% elsif pop_to_date._parameter_value == 'Yes' and pop_compare._parameter_value=='Month' %}
             ${gross_revenue_mtd}
         {% else %}
@@ -285,7 +305,7 @@ view: order_items {
 
   measure: gross_revenue_ytd {
     type: sum
-    filters: [iscomplete: "yes", ytd_only: "yes"]
+    filters: [is_complete: "yes", ytd_only: "yes"]
     sql: ${sale_price} ;;
     value_format_name: usd
   }
@@ -363,14 +383,21 @@ view: order_items {
     drill_fields: [product_details*]
   }
 
+  measure: total_orders {
+    description: "Total orders"
+    type: count_distinct
+    sql: ${order_id} ;;
+    filters: [status: "Complete"]
+  }
 
-  ##--parameters--##
+## PARAMETERS ##
   parameter: pop_compare {
-    label: "Choose Comparison (Pivot)"
+    label: "Select Period"
     view_label: "_orders_PoP"
     type: unquoted
     default_value: "Year"
     allowed_value: {value: "Year"}
+    allowed_value: {value: "Quarter"}
     allowed_value: {value: "Month"}
   }
 
@@ -380,7 +407,7 @@ view: order_items {
     allowed_value: {value:"No"}
   }
 
-  # ----- Sets of fields for drilling ------
+## DRILL ##
   set: detail {
     fields: [
       id,

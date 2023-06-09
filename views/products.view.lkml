@@ -28,6 +28,10 @@ view: products {
       url: "http://www.google.com/search?q={{ value }}"
       icon_url: "http://google.com/favicon.ico"
     }
+    link: {
+      label: "Compare Brand"
+      url: "https://looker.bytecode.io/dashboards/him8AFBPKX8q5mivsfYOkN?Select+Brand={{ value }}"
+    }
 
   }
 
@@ -35,6 +39,10 @@ view: products {
     description: "Product category"
     type: string
     sql: ${TABLE}.category ;;
+    link: {
+      label: "Compare Category"
+      url: "https://looker.bytecode.io/dashboards/him8AFBPKX8q5mivsfYOkN?Select+Category={{ value }}"
+    }
     drill_fields: [brand, name]
   }
 
@@ -95,19 +103,6 @@ view: products {
     type: sum
     sql: ${cost} ;;
     value_format_name: usd
-  }
-
-##--PARAMETERS--##
-  parameter: selected_brand {
-    type: string
-    suggest_dimension: brand
-    default_value: "The North Face"
-  }
-
-  parameter: select_category {
-    type: string
-    suggest_dimension: category
-    default_value: "Active"
   }
 
   # ----- Sets of fields for drilling ------

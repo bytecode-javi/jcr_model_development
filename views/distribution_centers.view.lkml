@@ -1,4 +1,6 @@
 # The name of this view in Looker is "Distribution Centers"
+# This view was enhanced from it's original form in order to perform a case study analysis as part of the Onboarding process at Bytecode IO
+
 view: distribution_centers {
   # The sql_table_name parameter indicates the underlying database table
   # to be used for all fields in this view.

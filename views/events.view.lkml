@@ -1,4 +1,6 @@
 # The name of this view in Looker is "Events"
+# This view was enhanced from it's original form in order to perform a case study analysis as part of the Onboarding process at Bytecode IO
+
 view: events {
   # The sql_table_name parameter indicates the underlying database table
   # to be used for all fields in this view.
@@ -102,6 +104,14 @@ view: events {
   dimension: user_id {
     type: number
     # hidden: yes
+    sql: ${TABLE}.user_id ;;
+  }
+
+
+## MEASURES ##
+
+  measure: user_count {
+    type:  count_distinct
     sql: ${TABLE}.user_id ;;
   }
 
